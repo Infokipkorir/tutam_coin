@@ -7,18 +7,20 @@
 
 <title>Tutam Coin</title>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 
 body{
 font-family:Arial;
 margin:0;
-background:#0f0f0f;
-color:white;
+background:white;
+color:black;
 text-align:center;
 }
 
 header{
-background:#151515;
+background:#f4f4f4;
 padding:15px;
 display:flex;
 justify-content:space-between;
@@ -27,14 +29,12 @@ align-items:center;
 
 .logo{
 font-size:22px;
-color:#00ffa6;
 display:flex;
-align-items:center;
 gap:8px;
 }
 
 .wallet{
-background:#1b1b1b;
+background:#eee;
 padding:8px 14px;
 border-radius:8px;
 }
@@ -46,33 +46,35 @@ padding:20px;
 }
 
 .section{
-background:#1a1a1a;
+background:#fafafa;
 padding:20px;
 margin:20px 0;
 border-radius:10px;
+border:1px solid #ddd;
 }
 
 button{
 padding:10px 18px;
-background:#00ffa6;
+background:green;
+color:white;
 border:none;
 border-radius:6px;
 cursor:pointer;
 }
 
 button:hover{
-background:#00cc84;
+background:#0a8f1c;
 }
 
 input{
 padding:8px;
 margin:5px;
-border:none;
 border-radius:4px;
+border:1px solid #ccc;
 }
 
 .task{
-background:#242424;
+background:#f6f6f6;
 padding:15px;
 margin:10px 0;
 border-radius:8px;
@@ -85,13 +87,13 @@ top:0;
 left:0;
 width:100%;
 height:100%;
-background:rgba(0,0,0,0.8);
+background:rgba(0,0,0,0.5);
 }
 
 .modal-content{
-background:#1a1a1a;
+background:white;
 padding:20px;
-width:300px;
+width:320px;
 margin:100px auto;
 border-radius:10px;
 }
@@ -100,6 +102,10 @@ border-radius:10px;
 float:right;
 cursor:pointer;
 font-size:20px;
+}
+
+canvas{
+background:white;
 }
 
 </style>
@@ -119,10 +125,8 @@ Balance: <span id="balance">0</span>
 </div>
 
 <div>
-
 <button onclick="openModal('loginModal')">Sign In</button>
 <button onclick="openModal('signupModal')">Sign Up</button>
-
 </div>
 
 </header>
@@ -131,9 +135,9 @@ Balance: <span id="balance">0</span>
 
 <div class="section">
 
-<h2>Coin Value</h2>
+<h2>Tutam Coin Value</h2>
 
-<p>1000 Tutam Coins = $0.50</p>
+<p>1000 Coins = $0.50</p>
 
 <p>Current Price: $<span id="coinValue">0.0005</span></p>
 
@@ -141,7 +145,7 @@ Balance: <span id="balance">0</span>
 
 <div class="section">
 
-<h2>Daily Check-In</h2>
+<h2>Daily Check-in</h2>
 
 <button onclick="dailyReward()">Claim 1000 Coins</button>
 
@@ -151,18 +155,19 @@ Balance: <span id="balance">0</span>
 
 <h2>Buy Tutam Coins</h2>
 
-<input id="buyAmount" placeholder="Coins">
-
+<input id="buyAmount" placeholder="Enter coins">
 <button onclick="buyCoins()">Buy</button>
 
 </div>
 
 <div class="section">
 
-<h2>Withdraw</h2>
+<h2>Withdraw Coins</h2>
 
-<p>Minimum withdraw: 10,000 coins</p>
+<p>Minimum withdrawal: 10,000 coins</p>
 
+<input id="withdrawAmount" placeholder="Coins to withdraw">
+<input id="withdrawAccount" placeholder="Account (PayPal / Wallet)">
 <button onclick="withdraw()">Withdraw</button>
 
 </div>
@@ -179,15 +184,23 @@ Balance: <span id="balance">0</span>
 src="https://www.youtube.com/embed/dQw4w9WgXcQ">
 </iframe>
 
-<button onclick="earn(200)">Complete</button>
+<button onclick="earn(200)">Complete Task</button>
 
 </div>
 
 </div>
 
+<div class="section">
+
+<h2>Tutam Market Graph</h2>
+
+<canvas id="marketChart"></canvas>
+
 </div>
 
-<!-- SIGNUP MODAL -->
+</div>
+
+<!-- SIGNUP -->
 
 <div class="modal" id="signupModal">
 
@@ -198,7 +211,6 @@ src="https://www.youtube.com/embed/dQw4w9WgXcQ">
 <h2>Sign Up</h2>
 
 <input id="suUser" placeholder="Username"><br>
-
 <input id="suPass" type="password" placeholder="Password"><br>
 
 <button onclick="signup()">Register</button>
@@ -207,7 +219,7 @@ src="https://www.youtube.com/embed/dQw4w9WgXcQ">
 
 </div>
 
-<!-- LOGIN MODAL -->
+<!-- LOGIN -->
 
 <div class="modal" id="loginModal">
 
@@ -218,7 +230,6 @@ src="https://www.youtube.com/embed/dQw4w9WgXcQ">
 <h2>Sign In</h2>
 
 <input id="liUser" placeholder="Username"><br>
-
 <input id="liPass" type="password" placeholder="Password"><br>
 
 <button onclick="login()">Login</button>
@@ -229,30 +240,30 @@ src="https://www.youtube.com/embed/dQw4w9WgXcQ">
 
 <script>
 
-/* USER STORAGE */
+/* USER */
 
-let user=localStorage.getItem("tutamUser");
+let username=localStorage.getItem("tutamUser");
 
 let coins=parseInt(localStorage.getItem("tutamCoins")||0);
 
 updateBalance();
 
-/* BALANCE */
-
 function updateBalance(){
-
 document.getElementById("balance").innerText=coins;
+}
 
+/* SAVE */
+
+function save(){
+localStorage.setItem("tutamCoins",coins);
+updateBalance();
 }
 
 /* EARN */
 
 function earn(amount){
-
 coins+=amount;
-
 save();
-
 }
 
 /* BUY */
@@ -262,11 +273,8 @@ function buyCoins(){
 let amount=parseInt(document.getElementById("buyAmount").value);
 
 if(amount>0){
-
 coins+=amount;
-
 save();
-
 }
 
 }
@@ -277,19 +285,16 @@ function dailyReward(){
 
 let last=localStorage.getItem("daily");
 
-let now=new Date().toDateString();
+let today=new Date().toDateString();
 
-if(last===now){
-
-alert("Already claimed today");
-
+if(last===today){
+alert("Daily reward already claimed");
 return;
-
 }
 
 coins+=1000;
 
-localStorage.setItem("daily",now);
+localStorage.setItem("daily",today);
 
 save();
 
@@ -299,29 +304,25 @@ save();
 
 function withdraw(){
 
-if(coins<10000){
+let amount=parseInt(document.getElementById("withdrawAmount").value);
 
-alert("Minimum withdraw is 10,000 coins");
+let account=document.getElementById("withdrawAccount").value;
 
+if(amount<10000){
+alert("Minimum withdrawal is 10,000 coins");
 return;
-
 }
 
-coins-=10000;
+if(amount>coins){
+alert("Not enough balance");
+return;
+}
+
+coins-=amount;
 
 save();
 
-alert("Withdraw request sent");
-
-}
-
-/* SAVE */
-
-function save(){
-
-localStorage.setItem("tutamCoins",coins);
-
-updateBalance();
+alert(username+" withdrawal successful. Withdraw amount "+amount+" coins to "+account);
 
 }
 
@@ -334,8 +335,9 @@ let u=document.getElementById("suUser").value;
 let p=document.getElementById("suPass").value;
 
 localStorage.setItem("tutamUser",u);
-
 localStorage.setItem("tutamPass",p);
+
+username=u;
 
 alert("Account created");
 
@@ -348,14 +350,14 @@ closeModal("signupModal");
 function login(){
 
 let u=document.getElementById("liUser").value;
-
 let p=document.getElementById("liPass").value;
 
 let su=localStorage.getItem("tutamUser");
-
 let sp=localStorage.getItem("tutamPass");
 
 if(u===su && p===sp){
+
+username=u;
 
 alert("Login successful");
 
@@ -369,21 +371,17 @@ alert("Invalid login");
 
 }
 
-/* MODALS */
+/* MODAL */
 
 function openModal(id){
-
 document.getElementById(id).style.display="block";
-
 }
 
 function closeModal(id){
-
 document.getElementById(id).style.display="none";
-
 }
 
-/* COIN PRICE GROWTH */
+/* COIN PRICE */
 
 let price=0.0005;
 
@@ -393,7 +391,30 @@ price+=0.00001;
 
 document.getElementById("coinValue").innerText=price.toFixed(6);
 
-},6000);
+},5000);
+
+/* MARKET GRAPH */
+
+const ctx=document.getElementById("marketChart");
+
+let prices=[10,12,11,14,13,15,17];
+
+new Chart(ctx,{
+
+type:"line",
+
+data:{
+labels:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
+datasets:[{
+label:"Tutam Coin Market",
+data:prices,
+borderColor:"green",
+borderWidth:2,
+fill:false
+}]
+}
+
+});
 
 </script>
 
