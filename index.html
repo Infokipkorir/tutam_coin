@@ -1,1 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
 
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ChatCoin Earn</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#0f0f0f;
+color:white;
+}
+
+header{
+background:#151515;
+padding:15px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.logo{
+font-size:22px;
+color:#00ffa6;
+display:flex;
+align-items:center;
+gap:8px;
+}
+
+.wallet{
+background:#1b1b1b;
+padding:10px 15px;
+border-radius:8px;
+}
+
+.container{
+max-width:1100px;
+margin:auto;
+padding:20px;
+}
+
+.section{
+background:#1a1a1a;
+padding:20px;
+border-radius:10px;
+margin-bottom:20px;
+}
+
+button{
+padding:8px 18px;
+background:#00ffa6;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+button:hover{
+background:#00cc84;
+}
+
+.task{
+background:#242424;
+padding:15px;
+margin:10px 0;
+border-radius:8px;
+}
+
+iframe{
+width:100%;
+height:200px;
+border:none;
+border-radius:8px;
+}
+
+.market{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+gap:12px;
+}
+
+.coin{
+background:#242424;
+padding:15px;
+border-radius:8px;
+}
+
+.coin-header{
+display:flex;
+align-items:center;
+gap:10px;
+}
+
+.coin-icon{
+width:26px;
+height:26px;
+}
+
+.up{
+color:#00ffa6;
+}
+
+.down{
+color:#ff5a5a;
+}
+
+input{
+padding:8px;
+margin:5px;
+border-radius:4px;
+border:none;
+}
+
+canvas{
+background:#000;
+border-radius:8px;
+}
+
+.refbox{
+display:flex;
+gap:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<div class="logo">
+
+💬 ChatCoin
+
+</div>
+
+<div class="wallet">
+
+Balance: <span id="balance">0</span> coins
+
+</div>
+
+</header>
+
+<div class="container">
+
+<!-- TASKS -->
+
+<div class="section">
+
+<h2>Earn ChatCoins</h2>
+
+<div class="task">
+
+<h3>Watch Video (+50)</h3>
+
+<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
+
+<button onclick="earn(50)">Complete Task</button>
+
+</div>
+
+<div class="task">
+
+<h3>Visit TikTok (+30)</h3>
+
+<button onclick="earn(30)">Open TikTok</button>
+
+</div>
+
+</div>
+
+<!-- REFERRAL -->
+
+<div class="section">
+
+<h2>Referral Program</h2>
+
+<p>Your referral link:</p>
+
+<div class="refbox">
+
+<input id="refLink" readonly>
+
+<button onclick="copyRef()">Copy</button>
+
+</div>
+
+<p>Total referrals: <span id="refCount">0</span></p>
+
+</div>
+
+<!-- CONVERT -->
+
+<div class="section">
+
+<h2>Convert Coins</h2>
+
+<p>1000 Coins = $0.30</p>
+
+<input id="coinInput" placeholder="Coins">
+
+<button onclick="convert()">Convert</button>
+
+<p id="convertResult"></p>
+
+</div>
+
+<!-- CHART -->
+
+<div class="section">
+
+<h2>Bitcoin Price Chart</h2>
+
+<canvas id="btcChart"></canvas>
+
+</div>
+
+<!-- CRYPTO MARKET -->
+
+<div class="section">
+
+<h2>Crypto Market</h2>
+
+<div class="market" id="market"></div>
+
+</div>
+
+</div>
+
+<script>
+
+/* WALLET */
+
+let coins=localStorage.getItem("chatcoin")||0;
+
+coins=parseInt(coins);
+
+updateBalance();
+
+function earn(c){
+
+coins+=c;
+
+localStorage.setItem("chatcoin",coins);
+
+updateBalance();
+
+}
+
+function updateBalance(){
+
+document.getElementById("balance").innerText=coins;
+
+}
+
+/* REFERRAL */
+
+let ref=localStorage.getItem("ref");
+
+if(!ref){
+
+ref=Math.random().toString(36).substring(2,8);
+
+localStorage.setItem("ref",ref);
+
+}
+
+document.getElementById("refLink").value=
+
+window.location.href+"?ref="+ref;
+
+function copyRef(){
+
+navigator.clipboard.writeText(
+document.getElementById("refLink").value
+);
+
+alert("Referral link copied");
+
+}
+
+/* CONVERT */
+
+function convert(){
+
+let c=document.getElementById("coinInput").value;
+
+let usd=(c/1000)*0.3;
+
+document.getElementById("convertResult").innerText=
+
+"$"+usd.toFixed(3);
+
+}
+
+/* CRYPTO MARKET */
+
+async function loadMarket(){
+
+let res=await fetch(
+
+"https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=8&page=1"
+
+);
+
+let data=await res.json();
+
+let container=document.getElementById("market");
+
+container.innerHTML="";
+
+data.forEach(coin=>{
+
+let div=document.createElement("div");
+
+div.className="coin";
+
+div.innerHTML=`
+
+<div class="coin-header">
+
+<img src="${coin.image}" class="coin-icon">
+
+<strong>${coin.name}</strong>
+
+</div>
+
+<p>$${coin.current_price}</p>
+
+<p class="${coin.price_change_percentage_24h>=0?'up':'down'}">
+
+${coin.price_change_percentage_24h.toFixed(2)}%
+
+</p>
+
+`;
+
+container.appendChild(div);
+
+});
+
+}
+
+loadMarket();
+
+/* BITCOIN CHART */
+
+async function loadChart(){
+
+let res=await fetch(
+
+"https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=7"
+
+);
+
+let data=await res.json();
+
+let prices=data.prices.map(p=>p[1]);
+
+let labels=data.prices.map(()=>'');
+
+new Chart(
+
+document.getElementById("btcChart"),
+
+{
+
+type:"line",
+
+data:{
+
+labels:labels,
+
+datasets:[{
+
+label:"BTC Price",
+
+data:prices,
+
+borderColor:"#00ffa6",
+
+borderWidth:2,
+
+fill:false
+
+}]
+
+},
+
+options:{
+
+plugins:{legend:{display:false}}
+
+}
+
+}
+
+);
+
+}
+
+loadChart();
+
+</script>
+
+</body>
+  </html>
