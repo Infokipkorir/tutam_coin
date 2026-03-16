@@ -5,9 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>ChatCoin Earn</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<title>Tutam Coin</title>
 
 <style>
 
@@ -16,6 +14,7 @@ font-family:Arial;
 margin:0;
 background:#0f0f0f;
 color:white;
+text-align:center;
 }
 
 header{
@@ -36,12 +35,12 @@ gap:8px;
 
 .wallet{
 background:#1b1b1b;
-padding:10px 15px;
+padding:8px 14px;
 border-radius:8px;
 }
 
 .container{
-max-width:1100px;
+max-width:900px;
 margin:auto;
 padding:20px;
 }
@@ -49,12 +48,12 @@ padding:20px;
 .section{
 background:#1a1a1a;
 padding:20px;
+margin:20px 0;
 border-radius:10px;
-margin-bottom:20px;
 }
 
 button{
-padding:8px 18px;
+padding:10px 18px;
 background:#00ffa6;
 border:none;
 border-radius:6px;
@@ -65,6 +64,13 @@ button:hover{
 background:#00cc84;
 }
 
+input{
+padding:8px;
+margin:5px;
+border:none;
+border-radius:4px;
+}
+
 .task{
 background:#242424;
 padding:15px;
@@ -72,59 +78,28 @@ margin:10px 0;
 border-radius:8px;
 }
 
-iframe{
+.modal{
+display:none;
+position:fixed;
+top:0;
+left:0;
 width:100%;
-height:200px;
-border:none;
-border-radius:8px;
+height:100%;
+background:rgba(0,0,0,0.8);
 }
 
-.market{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-gap:12px;
+.modal-content{
+background:#1a1a1a;
+padding:20px;
+width:300px;
+margin:100px auto;
+border-radius:10px;
 }
 
-.coin{
-background:#242424;
-padding:15px;
-border-radius:8px;
-}
-
-.coin-header{
-display:flex;
-align-items:center;
-gap:10px;
-}
-
-.coin-icon{
-width:26px;
-height:26px;
-}
-
-.up{
-color:#00ffa6;
-}
-
-.down{
-color:#ff5a5a;
-}
-
-input{
-padding:8px;
-margin:5px;
-border-radius:4px;
-border:none;
-}
-
-canvas{
-background:#000;
-border-radius:8px;
-}
-
-.refbox{
-display:flex;
-gap:10px;
+.close{
+float:right;
+cursor:pointer;
+font-size:20px;
 }
 
 </style>
@@ -136,14 +111,17 @@ gap:10px;
 <header>
 
 <div class="logo">
-
-💬 ChatCoin
-
+✌️ Tutam Coin
 </div>
 
 <div class="wallet">
+Balance: <span id="balance">0</span>
+</div>
 
-Balance: <span id="balance">0</span> coins
+<div>
+
+<button onclick="openModal('loginModal')">Sign In</button>
+<button onclick="openModal('signupModal')">Sign Up</button>
 
 </div>
 
@@ -151,85 +129,99 @@ Balance: <span id="balance">0</span> coins
 
 <div class="container">
 
-<!-- TASKS -->
+<div class="section">
+
+<h2>Coin Value</h2>
+
+<p>1000 Tutam Coins = $0.50</p>
+
+<p>Current Price: $<span id="coinValue">0.0005</span></p>
+
+</div>
 
 <div class="section">
 
-<h2>Earn ChatCoins</h2>
+<h2>Daily Check-In</h2>
+
+<button onclick="dailyReward()">Claim 1000 Coins</button>
+
+</div>
+
+<div class="section">
+
+<h2>Buy Tutam Coins</h2>
+
+<input id="buyAmount" placeholder="Coins">
+
+<button onclick="buyCoins()">Buy</button>
+
+</div>
+
+<div class="section">
+
+<h2>Withdraw</h2>
+
+<p>Minimum withdraw: 10,000 coins</p>
+
+<button onclick="withdraw()">Withdraw</button>
+
+</div>
+
+<div class="section">
+
+<h2>Earn Coins</h2>
 
 <div class="task">
 
-<h3>Watch Video (+50)</h3>
+<h3>Watch Video (+200)</h3>
 
-<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
+<iframe width="100%" height="200"
+src="https://www.youtube.com/embed/dQw4w9WgXcQ">
+</iframe>
 
-<button onclick="earn(50)">Complete Task</button>
-
-</div>
-
-<div class="task">
-
-<h3>Visit TikTok (+30)</h3>
-
-<button onclick="earn(30)">Open TikTok</button>
+<button onclick="earn(200)">Complete</button>
 
 </div>
 
 </div>
 
-<!-- REFERRAL -->
+</div>
 
-<div class="section">
+<!-- SIGNUP MODAL -->
 
-<h2>Referral Program</h2>
+<div class="modal" id="signupModal">
 
-<p>Your referral link:</p>
+<div class="modal-content">
 
-<div class="refbox">
+<span class="close" onclick="closeModal('signupModal')">×</span>
 
-<input id="refLink" readonly>
+<h2>Sign Up</h2>
 
-<button onclick="copyRef()">Copy</button>
+<input id="suUser" placeholder="Username"><br>
+
+<input id="suPass" type="password" placeholder="Password"><br>
+
+<button onclick="signup()">Register</button>
 
 </div>
 
-<p>Total referrals: <span id="refCount">0</span></p>
-
 </div>
 
-<!-- CONVERT -->
+<!-- LOGIN MODAL -->
 
-<div class="section">
+<div class="modal" id="loginModal">
 
-<h2>Convert Coins</h2>
+<div class="modal-content">
 
-<p>1000 Coins = $0.30</p>
+<span class="close" onclick="closeModal('loginModal')">×</span>
 
-<input id="coinInput" placeholder="Coins">
+<h2>Sign In</h2>
 
-<button onclick="convert()">Convert</button>
+<input id="liUser" placeholder="Username"><br>
 
-<p id="convertResult"></p>
+<input id="liPass" type="password" placeholder="Password"><br>
 
-</div>
-
-<!-- CHART -->
-
-<div class="section">
-
-<h2>Bitcoin Price Chart</h2>
-
-<canvas id="btcChart"></canvas>
-
-</div>
-
-<!-- CRYPTO MARKET -->
-
-<div class="section">
-
-<h2>Crypto Market</h2>
-
-<div class="market" id="market"></div>
+<button onclick="login()">Login</button>
 
 </div>
 
@@ -237,23 +229,15 @@ Balance: <span id="balance">0</span> coins
 
 <script>
 
-/* WALLET */
+/* USER STORAGE */
 
-let coins=localStorage.getItem("chatcoin")||0;
+let user=localStorage.getItem("tutamUser");
 
-coins=parseInt(coins);
-
-updateBalance();
-
-function earn(c){
-
-coins+=c;
-
-localStorage.setItem("chatcoin",coins);
+let coins=parseInt(localStorage.getItem("tutamCoins")||0);
 
 updateBalance();
 
-}
+/* BALANCE */
 
 function updateBalance(){
 
@@ -261,155 +245,157 @@ document.getElementById("balance").innerText=coins;
 
 }
 
-/* REFERRAL */
+/* EARN */
 
-let ref=localStorage.getItem("ref");
+function earn(amount){
 
-if(!ref){
+coins+=amount;
 
-ref=Math.random().toString(36).substring(2,8);
-
-localStorage.setItem("ref",ref);
+save();
 
 }
 
-document.getElementById("refLink").value=
+/* BUY */
 
-window.location.href+"?ref="+ref;
+function buyCoins(){
 
-function copyRef(){
+let amount=parseInt(document.getElementById("buyAmount").value);
 
-navigator.clipboard.writeText(
-document.getElementById("refLink").value
-);
+if(amount>0){
 
-alert("Referral link copied");
+coins+=amount;
 
-}
-
-/* CONVERT */
-
-function convert(){
-
-let c=document.getElementById("coinInput").value;
-
-let usd=(c/1000)*0.3;
-
-document.getElementById("convertResult").innerText=
-
-"$"+usd.toFixed(3);
-
-}
-
-/* CRYPTO MARKET */
-
-async function loadMarket(){
-
-let res=await fetch(
-
-"https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=8&page=1"
-
-);
-
-let data=await res.json();
-
-let container=document.getElementById("market");
-
-container.innerHTML="";
-
-data.forEach(coin=>{
-
-let div=document.createElement("div");
-
-div.className="coin";
-
-div.innerHTML=`
-
-<div class="coin-header">
-
-<img src="${coin.image}" class="coin-icon">
-
-<strong>${coin.name}</strong>
-
-</div>
-
-<p>$${coin.current_price}</p>
-
-<p class="${coin.price_change_percentage_24h>=0?'up':'down'}">
-
-${coin.price_change_percentage_24h.toFixed(2)}%
-
-</p>
-
-`;
-
-container.appendChild(div);
-
-});
-
-}
-
-loadMarket();
-
-/* BITCOIN CHART */
-
-async function loadChart(){
-
-let res=await fetch(
-
-"https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=7"
-
-);
-
-let data=await res.json();
-
-let prices=data.prices.map(p=>p[1]);
-
-let labels=data.prices.map(()=>'');
-
-new Chart(
-
-document.getElementById("btcChart"),
-
-{
-
-type:"line",
-
-data:{
-
-labels:labels,
-
-datasets:[{
-
-label:"BTC Price",
-
-data:prices,
-
-borderColor:"#00ffa6",
-
-borderWidth:2,
-
-fill:false
-
-}]
-
-},
-
-options:{
-
-plugins:{legend:{display:false}}
+save();
 
 }
 
 }
 
-);
+/* DAILY */
+
+function dailyReward(){
+
+let last=localStorage.getItem("daily");
+
+let now=new Date().toDateString();
+
+if(last===now){
+
+alert("Already claimed today");
+
+return;
 
 }
 
-loadChart();
+coins+=1000;
+
+localStorage.setItem("daily",now);
+
+save();
+
+}
+
+/* WITHDRAW */
+
+function withdraw(){
+
+if(coins<10000){
+
+alert("Minimum withdraw is 10,000 coins");
+
+return;
+
+}
+
+coins-=10000;
+
+save();
+
+alert("Withdraw request sent");
+
+}
+
+/* SAVE */
+
+function save(){
+
+localStorage.setItem("tutamCoins",coins);
+
+updateBalance();
+
+}
+
+/* SIGNUP */
+
+function signup(){
+
+let u=document.getElementById("suUser").value;
+
+let p=document.getElementById("suPass").value;
+
+localStorage.setItem("tutamUser",u);
+
+localStorage.setItem("tutamPass",p);
+
+alert("Account created");
+
+closeModal("signupModal");
+
+}
+
+/* LOGIN */
+
+function login(){
+
+let u=document.getElementById("liUser").value;
+
+let p=document.getElementById("liPass").value;
+
+let su=localStorage.getItem("tutamUser");
+
+let sp=localStorage.getItem("tutamPass");
+
+if(u===su && p===sp){
+
+alert("Login successful");
+
+closeModal("loginModal");
+
+}else{
+
+alert("Invalid login");
+
+}
+
+}
+
+/* MODALS */
+
+function openModal(id){
+
+document.getElementById(id).style.display="block";
+
+}
+
+function closeModal(id){
+
+document.getElementById(id).style.display="none";
+
+}
+
+/* COIN PRICE GROWTH */
+
+let price=0.0005;
+
+setInterval(()=>{
+
+price+=0.00001;
+
+document.getElementById("coinValue").innerText=price.toFixed(6);
+
+},6000);
 
 </script>
 
 </body>
-  </html>
+</html>
