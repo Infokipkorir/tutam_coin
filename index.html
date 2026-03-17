@@ -5,108 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tutam Coin</title>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="style.css">
 
-<style>
-body{
-font-family:Arial;
-margin:0;
-background:#f7f7f7;
-}
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
 
-header{
-background:white;
-padding:15px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-box-shadow:0 2px 5px rgba(0,0,0,0.1);
-}
-
-.logo{
-font-size:20px;
-font-weight:bold;
-}
-
-.wallet{
-background:#eee;
-padding:8px 12px;
-border-radius:8px;
-}
-
-.container{
-padding:15px;
-}
-
-.section{
-background:white;
-padding:15px;
-margin:15px 0;
-border-radius:10px;
-}
-
-button{
-padding:10px;
-border:none;
-background:#16a34a;
-color:white;
-border-radius:6px;
-cursor:pointer;
-}
-
-input{
-width:100%;
-padding:10px;
-margin:6px 0;
-border-radius:6px;
-border:1px solid #ccc;
-}
-
-.task{
-background:#f1f1f1;
-padding:10px;
-border-radius:8px;
-}
-
-.modal{
-display:none;
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.6);
-}
-
-.modal-content{
-background:white;
-width:90%;
-max-width:350px;
-margin:100px auto;
-padding:20px;
-border-radius:10px;
-}
-
-.close{
-float:right;
-cursor:pointer;
-}
-
-.notification{
-position:fixed;
-top:0;
-width:100%;
-background:#ffd54f;
-padding:10px;
-text-align:center;
-display:none;
-}
-</style>
 </head>
 
 <body>
-
-<div class="notification" id="notifyBar"></div>
 
 <header>
 <div class="logo">💰 Tutam Coin</div>
@@ -116,48 +23,27 @@ display:none;
 
 <div class="container">
 
-<div class="section">
-<h3>Coin Value</h3>
-<p>1000 Coins = $0.50</p>
-<p>Price: $<span id="coinValue">0.0005</span></p>
+<div class="card">
+<h3>BTC/USDT Live Price</h3>
+<h2 id="btcPrice">Loading...</h2>
 </div>
 
-<div class="section">
-<h3>Daily Reward</h3>
-<button onclick="dailyReward()">Claim 1000 Coins</button>
-</div>
-
-<div class="section">
-<h3>Buy Coins</h3>
-<input id="buyAmount" placeholder="Enter coins">
-<button onclick="buyCoins()">Buy</button>
-</div>
-
-<div class="section">
-<h3>Withdraw</h3>
-<input id="withdrawAmount" placeholder="Amount">
-<input id="withdrawAccount" placeholder="Account">
-<button onclick="withdraw()">Withdraw</button>
-</div>
-
-<div class="section">
+<div class="card">
 <h3>Earn Coins</h3>
 
-<div class="task">
-<h4>Watch Video (30/sec)</h4>
-
-<video id="earnVideo" width="100%" controls>
+<video id="video" controls width="100%">
 <source src="https://www.w3schools.com/html/mov_bbb.mp4">
 </video>
 
-<p>Earned: <span id="videoEarn">0</span></p>
+<p>Earned: <span id="earned">0</span></p>
 
 </div>
-</div>
 
-<div class="section">
-<h3>Market</h3>
-<canvas id="chart"></canvas>
+<div class="card">
+<h3>Referral</h3>
+<p>Your Code: <span id="refCode"></span></p>
+<input id="refInput" placeholder="Enter referral code">
+<button onclick="applyReferral()">Apply</button>
 </div>
 
 </div>
@@ -166,215 +52,23 @@ display:none;
 <div class="modal" id="modal">
 <div class="modal-content">
 
-<span class="close" onclick="closeModal()">✖</span>
-
 <h2 id="authTitle">Sign In</h2>
 
-<input id="name" placeholder="Full Name" style="display:none;">
+<input id="name" placeholder="Name" style="display:none;">
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
 
-<button onclick="handleAuth()" id="authBtn">Sign In</button>
+<button onclick="auth()" id="authBtn">Sign In</button>
 
-<p id="toggleAuth" style="color:blue;cursor:pointer;">Create account</p>
+<p onclick="toggleAuth()" id="toggle">Create account</p>
 
 </div>
 </div>
 
-<script>
-
-/* STATE */
-let coins = 0;
-let username = "";
-let isSignup = false;
-
-/* LOAD USER */
-function loadUser(){
-let data = JSON.parse(localStorage.getItem("tutamUserData"));
-if(data){
-coins = data.coins || 0;
-username = data.username;
-updateBalance();
-}
-}
-loadUser();
-
-/* BALANCE */
-function updateBalance(){
-document.getElementById("balance").innerText = coins;
-}
-
-/* SAVE */
-function save(){
-let data = JSON.parse(localStorage.getItem("tutamUserData"));
-if(data){
-data.coins = coins;
-localStorage.setItem("tutamUserData", JSON.stringify(data));
-}
-updateBalance();
-}
-
-/* AUTH TOGGLE */
-document.getElementById("toggleAuth").onclick = () => {
-isSignup = !isSignup;
-
-document.getElementById("authTitle").innerText = isSignup ? "Create Account" : "Sign In";
-document.getElementById("authBtn").innerText = isSignup ? "Sign Up" : "Sign In";
-document.getElementById("name").style.display = isSignup ? "block" : "none";
-document.getElementById("toggleAuth").innerText =
-isSignup ? "Already have account? Sign In" : "Create account";
-};
-
-/* USERNAME */
-function generateUsername(name){
-return name.toLowerCase().replace(/\s/g,'') + Math.floor(Math.random()*1000);
-}
-
-/* AUTH */
-function handleAuth(){
-
-let name = document.getElementById("name").value;
-let email = document.getElementById("email").value;
-let pass = document.getElementById("password").value;
-
-if(isSignup){
-
-if(!name || !email || !pass){
-alert("Fill all fields");
-return;
-}
-
-let user = {
-name,
-email,
-password: pass,
-username: generateUsername(name),
-coins: 0
-};
-
-localStorage.setItem("tutamUserData", JSON.stringify(user));
-
-alert("Account created! Username: " + user.username);
-
-}else{
-
-let user = JSON.parse(localStorage.getItem("tutamUserData"));
-
-if(user && email === user.email && pass === user.password){
-coins = user.coins;
-username = user.username;
-
-alert("Welcome " + user.name);
-closeModal();
-updateBalance();
-
-}else{
-alert("Invalid login");
-}
-}
-}
-
-/* MODAL */
-function openModal(){
-document.getElementById("modal").style.display = "block";
-}
-function closeModal(){
-document.getElementById("modal").style.display = "none";
-}
-
-/* DAILY */
-function dailyReward(){
-let last = localStorage.getItem("daily");
-let today = new Date().toDateString();
-
-if(last === today){
-alert("Already claimed");
-return;
-}
-
-coins += 1000;
-localStorage.setItem("daily", today);
-save();
-}
-
-/* BUY */
-function buyCoins(){
-let amount = parseInt(document.getElementById("buyAmount").value);
-if(amount > 0){
-coins += amount;
-save();
-}
-}
-
-/* WITHDRAW */
-function withdraw(){
-let amount = parseInt(document.getElementById("withdrawAmount").value);
-let acc = document.getElementById("withdrawAccount").value;
-
-if(amount < 10000){
-alert("Minimum 10,000");
-return;
-}
-
-if(amount > coins){
-alert("Not enough balance");
-return;
-}
-
-coins -= amount;
-save();
-
-alert("Withdraw sent to " + acc);
-}
-
-/* VIDEO EARNING */
-let video = document.getElementById("earnVideo");
-let interval;
-let earned = 0;
-
-video.onplay = () => {
-interval = setInterval(()=>{
-coins += 30;
-earned += 30;
-document.getElementById("videoEarn").innerText = earned;
-save();
-},1000);
-};
-
-video.onpause = () => clearInterval(interval);
-video.onended = () => clearInterval(interval);
-
-/* PRICE */
-let price = 0.0005;
-setInterval(()=>{
-price += 0.00001;
-document.getElementById("coinValue").innerText = price.toFixed(6);
-},5000);
-
-/* CHART */
-new Chart(document.getElementById("chart"),{
-type:'line',
-data:{
-labels:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
-datasets:[{
-label:"Tutam Coin",
-data:[10,12,11,15,14,18,20],
-borderColor:"green"
-}]
-}
-});
-
-/* NOTIFY */
-function notify(msg){
-let bar = document.getElementById("notifyBar");
-bar.innerText = msg;
-bar.style.display = "block";
-setTimeout(()=>bar.style.display="none",4000);
-}
-
-setTimeout(()=>notify("Welcome to Tutam Coin 🚀"),1500);
-
-</script>
+<script src="firebase.js"></script>
+<script src="api.js"></script>
+<script src="referral.js"></script>
+<script src="app.js"></script>
 
 </body>
 </html>
