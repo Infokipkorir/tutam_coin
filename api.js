@@ -1,12 +1,90 @@
-async function loadBTC(){
+let userCoins = 0;
+let currentUser = null;
+let isSignup = false;
 
-let res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd");
+/* TOGGLE AUTH */
+function toggleAuth(){
+isSignup = !isSignup;
 
-let data = await res.json();
-
-document.getElementById("btcPrice").innerText = "$" + data.bitcoin.usd;
-
+document.getElementById("authTitle").innerText = isSignup ? "Sign Up" : "Sign In";
+document.getElementById("authBtn").innerText = isSignup ? "Sign Up" : "Sign In";
+document.getElementById("name").style.display = isSignup ? "block" : "none";
 }
 
-setInterval(loadBTC,5000);
-loadBTC();
+/* AUTH */
+function auth(){
+
+let email = document.getElementById("email").value;
+let pass = document.getElementById("password").value;
+let name = document.getElementById("name").value;
+
+if(isSignup){
+
+auth.createUserWithEmailAndPassword(email, pass)
+.then(user => {
+
+let uid = user.user.uid;
+let ref = generateRef(uid);
+
+db.collection("users").doc(uid).set({
+name,
+email,
+coins:0,
+ref
+});
+
+alert("Account created!");
+
+})
+.catch(err=>alert(err.message));
+
+}else{
+
+auth.signInWithEmailAndPassword(email, pass)
+.catch(err=>alert(err.message));
+
+}
+}
+
+/* AFTER LOGIN */
+auth.onAuthStateChanged(user=>{
+if(user){
+currentUser = user;
+
+db.collection("users").doc(user.uid).get().then(doc=>{
+let data = doc.data();
+userCoins = data.coins;
+document.getElementById("balance").innerText = userCoins;
+document.getElementById("refCode").innerText = data.ref;
+});
+}
+});
+
+/* ADD COINS */
+function addCoins(amount){
+userCoins += amount;
+
+db.collection("users").doc(currentUser.uid).update({
+coins:userCoins
+});
+
+document.getElementById("balance").innerText = userCoins;
+}
+
+/* VIDEO EARNING */
+let vid = document.getElementById("video");
+let interval;
+
+vid.onplay = ()=>{
+interval = setInterval(()=>{
+addCoins(30);
+},1000);
+};
+
+vid.onpause = ()=>clearInterval(interval);
+vid.onended = ()=>clearInterval(interval);
+
+/* MODAL */
+function openModal(){
+document.getElementById("modal").style.display="block";
+}
