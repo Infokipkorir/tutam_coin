@@ -88,3 +88,30 @@ vid.onended = ()=>clearInterval(interval);
 function openModal(){
 document.getElementById("modal").style.display="block";
 }
+db.collection("users").doc(uid).set({
+name,
+email,
+coins:0,
+ref,
+totalRefs:0,
+refEarn:0,
+refUsed:false
+});
+function checkReferralLink(){
+
+let url = new URL(window.location.href);
+let ref = url.searchParams.get("ref");
+
+if(ref){
+localStorage.setItem("pendingRef", ref);
+}
+}
+
+checkReferralLink();
+let pending = localStorage.getItem("pendingRef");
+
+if(pending){
+document.getElementById("refInput").value = pending;
+applyReferral();
+localStorage.removeItem("pendingRef");
+  }
